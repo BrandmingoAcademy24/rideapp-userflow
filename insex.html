@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ride + Parcel App — UI Flow (Presentation Edition)</title>
+  <style>
+    :root {
+      --bg: #070a14;
+      --panel: #0c1226;
+      --panel-2: #0e1630;
+      --muted: #9fb2d0;
+      --text: #e9f0ff;
+      --accent: #6aa7ff;        /* Customer */
+      --accent-2: #9b7bff;      /* Customer gradient */
+      --rider: #ffad49;         /* Rider */
+      --rider-2: #38e6a8;       /* Rider gradient */
+      --admin: #ffd166;         /* Admin */
+      --admin-2: #7dd3fc;       /* Admin gradient */
+      --ok: #2ee6a6;
+      --warn: #ffd166;
+      --danger: #ff6b6b;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box }
+    html, body { height: 100% }
+    body {
+      margin: 0; font: 14px/1.5 Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: var(--text);
+      background:
+        radial-gradient(1000px 700px at 20% -10%, #16296666, transparent),
+        radial-gradient(800px 700px at 120% 0%, #0e1c46aa, transparent),
+        var(--bg);
+    }
+
+    /* Layout */
+    .shell { display: grid; grid-template-columns: 280px 1fr; gap: 18px; height: 100vh; }
+    @media (max-width: 1100px){ .shell { grid-template-columns: 1fr } }
+
+    /* Sidebar */
+    aside.sidebar { padding: 16px; background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.08); border-radius: 20px; margin: 16px; box-shadow: var(--shadow); }
+    .logo { width: 44px; height: 44px; border-radius: 12px; background: conic-gradient(from 220deg, #72a0ff, #9b7bff 35%, #7c5cff 70%, #72a0ff); box-shadow: var(--shadow); }
+    .brand { display:flex; align-items:center; gap:12px; margin-bottom: 14px; }
+    .brand h1 { font-size: 16px; margin: 0; letter-spacing: .4px }
+
+    .menu { display: grid; gap: 8px; margin-top: 12px }
+    .menu button { text-align: left; border: 1px solid rgba(255,255,255,.08); background: #0b1227; color: var(--muted); padding: 10px 12px; border-radius: 12px; cursor: pointer; transition: .2s }
+    .menu button.active { background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #08111f; }
+
+    /* Main */
+    main { padding: 16px 16px 22px; }
+    .row { display:flex; gap: 16px; flex-wrap: wrap }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.08); border-radius: 20px; box-shadow: var(--shadow) }
+    .card .head { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.08); display:flex; align-items:center; justify-content: space-between }
+    .card .body { padding: 16px }
+    .pill { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.1); color: var(--muted) }
+
+    /* App Tabs */
+    .apptabs { display:flex; gap:8px; flex-wrap: wrap }
+    .apptabs button { border:0; background: rgba(255,255,255,.06); color:var(--muted); padding: 10px 14px; border-radius: 999px; cursor:pointer; font-weight:700 }
+    .apptabs button.active { background: linear-gradient(90deg, var(--accent), var(--accent-2)); color:#08111f }
+
+    /* 2-column grid for flow + phone */
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 18px }
+    @media (max-width: 1100px){ .grid { grid-template-columns: 1fr } }
+
+    /* Flow steps */
+    .steps { display:grid; gap:10px }
+    .step { display:grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items:center; padding: 10px; border-radius: 14px; border: 1px dashed rgba(255,255,255,.12) }
+    .dot { width:12px; height:12px; border-radius: 999px; background: var(--muted); box-shadow: 0 0 0 5px rgba(255,255,255,.06) }
+    .step.done .dot{ background: var(--ok) }
+    .step.active { border-color: var(--accent); background: radial-gradient(240px 100px at 15% 50%, rgba(106,167,255,.2), transparent) }
+    .hint { color: var(--muted); font-size: 12px }
+
+    /* Phone shell */
+    .scene { display:grid; grid-template-columns: 380px 1fr; gap: 18px }
+    @media (max-width: 1100px){ .scene{ grid-template-columns: 1fr } }
+    .phone { width: 380px; max-width: 100%; height: 720px; border-right: 1px solid rgba(255,255,255,.08); background: #0c132a; border-radius: 20px; overflow: hidden; display:grid; grid-template-rows: 46px 44px 1fr 62px }
+    .statusbar { display:flex; align-items:center; justify-content: space-between; padding: 0 12px; background: #0f1a3a; border-bottom: 1px solid rgba(255,255,255,.08); font-size: 12px }
+    .topbar { display:flex; align-items:center; gap:8px; padding: 8px 12px; background: #0e1836; border-bottom: 1px solid rgba(255,255,255,.08) }
+    .content { padding: 14px; overflow:auto }
+    .bottombar { display:flex; align-items:center; justify-content: space-around; border-top: 1px solid rgba(255,255,255,.08); background: #0e1836 }
+    .navbtn { background: transparent; border:0; color: var(--muted); padding: 8px 12px; font-size: 12px; cursor:pointer }
+    .navbtn.active { color: var(--ok) }
+
+    .btn{ background: linear-gradient(90deg, var(--accent), var(--accent-2)); color:#08111f; border:0; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer }
+    .btn.ghost{ background: transparent; color: var(--text); border: 1px solid rgba(255,255,255,.25) }
+
+    /* Inputs */
+    .field{ display:grid; gap:6px; margin-bottom:12px }
+    .input, select, .promo{ background:#0b1630; color:#e8eefc; border:1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 10px 12px }
+    .split{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px }
+
+    /* Map mock with animation */
+    .map{ height: 230px; border-radius: 14px; background:
+      radial-gradient(400px 200px at 20% 20%, #0f1e46, transparent 60%),
+      repeating-linear-gradient(90deg, #0f1b3c 0 24px, #0b142e 24px 25px),
+      repeating-linear-gradient(180deg, #0f1b3c 0 24px, #0b142e 24px 25px);
+      position: relative; overflow: hidden }
+    .pin{ position:absolute; width: 12px; height: 12px; background: var(--danger); border-radius:999px; box-shadow: 0 0 0 6px rgba(255,107,107,.2); animation: float 3s ease-in-out infinite }
+    .car{ position:absolute; width: 18px; height: 10px; background: var(--ok); border-radius: 3px; top: 60%; left: 10%; animation: drive 7s linear infinite }
+    @keyframes float { 0%{ transform:translateY(0) } 50%{ transform:translateY(-4px) } 100%{ transform:translateY(0) } }
+    @keyframes drive { 0%{ left: 8% } 50%{ left: 64% } 100%{ left: 8% } }
+
+    /* List & items */
+    .list{ display:grid; gap:8px }
+    .item{ display:flex; align-items:center; justify-content:space-between; padding:10px; background:#0b1630; border:1px solid rgba(255,255,255,.08); border-radius:12px }
+
+    /* Charts (admin & rider earnings) */
+    canvas.chart{ width: 100%; height: 180px; background:#0b1630; border:1px solid rgba(255,255,255,.08); border-radius: 12px }
+
+    /* Tooltips */
+    [data-tip]{ position: relative }
+    [data-tip]:hover::after{ content: attr(data-tip); position:absolute; left:50%; transform:translateX(-50%); bottom: 120%; white-space:nowrap; padding:6px 8px; font-size:12px; color:#06101f; background:#e9f0ff; border-radius:8px; }
+
+    /* Toast */
+    .toast { position: fixed; right: 20px; top: 20px; padding: 10px 12px; background: #0b1630; border: 1px solid rgba(255,255,255,.2); border-radius: 12px; display:none }
+    .toast.show{ display:block; animation: pop .22s ease-out }
+    @keyframes pop{ from{ transform: translateY(-6px); opacity: 0 } to{ transform: translateY(0); opacity:1 } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="logo" aria-hidden="true"></div><h1>Ride + Parcel — UI Flow (Presentation)</h1></div>
+      <div class="apptabs" role="tablist" aria-label="Apps">
+        <button class="active" data-app="customer">Customer App</button>
+        <button data-app="rider">Rider App</button>
+        <button data-app="admin">Admin Panel</button>
+      </div>
+      <div style="margin-top:16px" class="menu">
+        <button id="run-all">▶ Run Full Simulation</button>
+        <button id="export-ss">📸 Export Flow Shots</button>
+        <button id="reset-all">↺ Reset All</button>
+        <div class="hint">Tip: Hover elements for tooltips. This is a static, API-free showcase optimised for client demos.</div>
+      </div>
+    </aside>
+
+    <main>
+      <!-- CUSTOMER -->
+      <section id="customer" class="screen">
+        <div class="row">
+          <div class="card" style="width:380px">
+            <div class="head"><strong>Customer Flow</strong><span class="pill">Gradient Luxe</span></div>
+            <div class="body">
+              <div class="steps" id="steps-cust"></div>
+            </div>
+          </div>
+          <div class="card" style="flex:1">
+            <div class="head"><strong>Phone Preview — Customer</strong><span class="pill">Interactive</span></div>
+            <div class="body">
+              <div class="scene">
+                <div class="phone">
+                  <div class="statusbar"><span>9:41</span><span>LTE ●●●▴</span></div>
+                  <div class="topbar"><strong id="cust-title">Onboarding</strong><span class="hint">Customer</span></div>
+                  <div class="content" id="cust-screen"></div>
+                  <div class="bottombar">
+                    <button class="navbtn" data-cust-nav="home">Home</button>
+                    <button class="navbtn" data-cust-nav="rides">Rides</button>
+                    <button class="navbtn" data-cust-nav="support">Support</button>
+                    <button class="navbtn" data-cust-nav="profile">Profile</button>
+                  </div>
+                </div>
+                <div class="card" style="flex:1">
+                  <div class="head"><strong>Presenter Notes</strong><span class="pill">Explainers</span></div>
+                  <div class="body">
+                    <ul class="list">
+                      <li class="item"><span>Promo codes dynamically recalculates fare via Distance Matrix</span><span class="pill">Demo</span></li>
+                      <li class="item"><span>Progress tracker highlights Booking → Match → Trip → Payment</span><span class="pill">UX</span></li>
+                      <li class="item"><span>In-app chat mock with timestamps</span><span class="pill">Support</span></li>
+                    </ul>
+                    <div class="row" style="margin-top:12px">
+                      <button class="btn" id="demo-ride">Run Ride</button>
+                      <button class="btn ghost" id="demo-parcel">Run Parcel</button>
+                      <button class="btn ghost" id="reset-cust">Reset</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIDER -->
+      <section id="rider" class="screen" hidden>
+        <div class="row">
+          <div class="card" style="width:380px">
+            <div class="head"><strong>Rider Flow</strong><span class="pill">Detailed</span></div>
+            <div class="body"><div class="steps" id="steps-rider"></div></div>
+          </div>
+          <div class="card" style="flex:1">
+            <div class="head"><strong>Phone Preview — Rider</strong><span class="pill">Interactive</span></div>
+            <div class="body">
+              <div class="scene">
+                <div class="phone">
+                  <div class="statusbar"><span>9:41</span><span>VoLTE ●●●▴</span></div>
+                  <div class="topbar"><strong id="rider-title">KYC & Approval</strong><span class="hint">Rider</span></div>
+                  <div class="content" id="rider-screen"></div>
+                  <div class="bottombar">
+                    <button class="navbtn" data-rider-nav="dash">Dashboard</button>
+                    <button class="navbtn" data-rider-nav="trips">Trips</button>
+                    <button class="navbtn" data-rider-nav="earn">Earnings</button>
+                    <button class="navbtn" data-rider-nav="profile">Profile</button>
+                  </div>
+                </div>
+                <div class="card" style="flex:1">
+                  <div class="head"><strong>Earnings & Performance</strong><span class="pill">Charts</span></div>
+                  <div class="body">
+                    <canvas id="earn-chart" class="chart"></canvas>
+                    <div class="hint" style="margin-top:8px">Target badges & bonus tiers can be shown here for gamification.</div>
+                    <div class="row" style="margin-top:12px">
+                      <button class="btn" id="demo-request">Simulate Full Trip</button>
+                      <button class="btn ghost" id="reset-rider">Reset</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN -->
+      <section id="admin" class="screen" hidden>
+        <div class="row">
+          <div class="card" style="width:380px">
+            <div class="head"><strong>Admin Flow</strong><span class="pill">Operations</span></div>
+            <div class="body"><div class="steps" id="steps-admin"></div></div>
+          </div>
+          <div class="card" style="flex:1">
+            <div class="head"><strong>Admin Console</strong><span class="pill">KPIs + Live</span></div>
+            <div class="body">
+              <div class="scene">
+                <div class="phone" style="height: 740px">
+                  <div class="statusbar"><span>9:41</span><span>Wi‑Fi ●●●▴</span></div>
+                  <div class="topbar"><strong id="admin-title">Dashboard</strong><span class="hint">Admin</span></div>
+                  <div class="content" id="admin-screen"></div>
+                  <div class="bottombar">
+                    <button class="navbtn" data-admin-nav="dash">Dashboard</button>
+                    <button class="navbtn" data-admin-nav="users">Users</button>
+                    <button class="navbtn" data-admin-nav="trips">Trips</button>
+                    <button class="navbtn" data-admin-nav="fare">Fare</button>
+                    <button class="navbtn" data-admin-nav="payouts">Payouts</button>
+                  </div>
+                </div>
+                <div class="card" style="flex:1">
+                  <div class="head"><strong>Insight Charts</strong><span class="pill">Demo</span></div>
+                  <div class="body">
+                    <canvas id="kpi-chart" class="chart"></canvas>
+                    <div class="row" style="margin-top:12px">
+                      <button class="btn" id="demo-kyc">Approve 5 KYCs</button>
+                      <button class="btn ghost" id="demo-payout">Run EOD Payouts</button>
+                      <button class="btn ghost" id="reset-admin">Reset</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const toast = (msg) => { const t=$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1400); };
+
+// App tab switching
+$$('.apptabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $$('.apptabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const id = btn.dataset.app;
+    $$('.screen').forEach(s=> s.hidden = true);
+    $('#'+id).hidden = false;
+  })
+});
+
+// ----- CUSTOMER FLOW -----
+const custSteps = [
+  {title:'Onboarding', subtitle:'Splash → OTP login', tag:'Auth'},
+  {title:'Home', subtitle:'Choose Ride or Parcel', tag:'Home'},
+  {title:'Vehicle', subtitle:'Bike / Auto / Car', tag:'Choice'},
+  {title:'Locations', subtitle:'Pickup & Drop via Maps', tag:'Map'},
+  {title:'Fare & Promo', subtitle:'Distance Matrix + promo', tag:'Pricing'},
+  {title:'Driver Search', subtitle:'Priority allocation', tag:'Match'},
+  {title:'Live Tracking', subtitle:'ETA + chat/call', tag:'Tracking'},
+  {title:'Payment', subtitle:'UPI/Card/Cash', tag:'Payment'},
+  {title:'Rating & History', subtitle:'Feedback + trips', tag:'Post-ride'},
+];
+
+function renderSteps(container, steps){
+  container.innerHTML = steps.map((s,i)=>`
+    <div class="step" data-step="${i}">
+      <div class="dot"></div>
+      <div><strong>${s.title}</strong><div class="hint">${s.subtitle||''}</div></div>
+      <span class="pill">${s.tag||''}</span>
+    </div>
+  `).join('');
+}
+renderSteps($('#steps-cust'), custSteps);
+
+function setStepState(container, idx){
+  const nodes = $$('.step', container);
+  nodes.forEach((n,i)=>{ n.classList.remove('done','active'); if(i<idx) n.classList.add('done'); });
+  nodes[idx]?.classList.add('active');
+}
+
+let custIdx = 0;
+function custScreen(i){
+  custIdx = i; setStepState($('#steps-cust'), i); $('#cust-title').textContent = custSteps[i].title;
+  const nextBtn = `<div class="row" style="justify-content:space-between; margin-top:12px">
+    <button class="btn ghost" ${i===0?'disabled':''} onclick="custScreen(${i-1})">Back</button>
+    <button class="btn" ${i===custSteps.length-1?'disabled':''} onclick="custScreen(${i+1})">Next</button>
+  </div>`;
+  const map = `<div class="map"><div class="pin" style="left:40%; top:34%"></div><div class="pin" style="left:70%; top:68%"></div><div class="car"></div></div>`;
+  const prog = `<div class="list" style="margin-bottom:10px">
+    <div class="item"><div>Booking Progress</div><div class="hint">${['Booking','Match','Trip','Payment'][Math.min(3, Math.floor(i/2))]}</div></div>
+  </div>`;
+  let html='';
+  switch(i){
+    case 0:
+      html = `
+        ${prog}
+        <div class="field"><label>Phone Number</label><input class="input" placeholder="+91 9XXXXXXXXX"/></div>
+        <button class="btn" onclick="custScreen(1); toast('OTP Verified')">Continue</button>
+      `; break;
+    case 1:
+      html = `${prog}
+        <div class="split">
+          <button class="btn" onclick="custScreen(2)">Ride</button>
+          <button class="btn ghost" onclick="custScreen(2)">Parcel</button>
+        </div>
+        <div class="hint">Pick service to proceed.</div>`; break;
+    case 2:
+      html = `${prog}
+        <div class="row">
+          <button class="pill" onclick="custScreen(3)">Bike</button>
+          <button class="pill" onclick="custScreen(3)">Auto</button>
+          <button class="pill" onclick="custScreen(3)">Car</button>
+        </div>`; break;
+    case 3:
+      html = `${prog}
+        ${map}
+        <div class="field"><label>Pickup</label><input class="input" placeholder="Type pickup..."/></div>
+        <div class="field"><label>Drop</label><input class="input" placeholder="Type drop..."/></div>
+        <button class="btn" onclick="custScreen(4)">Get Fare</button>`; break;
+    case 4:
+      html = `${prog}
+        <div class="item"><div><strong>Estimated Fare</strong><div class="hint">6.4 km · 22 mins</div></div><strong>₹ 142</strong></div>
+        <div class="split"><input class="promo" placeholder="Apply Promo Code"/><button class="btn ghost" onclick="toast('Promo applied: -₹20')">Apply</button></div>
+        <div class="row"><button class="btn" onclick="custScreen(5)">Confirm Booking</button><button class="btn ghost" onclick="custScreen(3)">Edit</button></div>`; break;
+    case 5:
+      html = `${prog}
+        <div class="list">
+          <div class="item"><div><strong>Searching drivers…</strong><div class="hint">Looking nearby</div></div><span class="pill">~10s</span></div>
+          <div class="item"><div>Priority Matching<div class="hint">Rating 4.8+ · 2 km radius</div></div></div>
+        </div>
+        <button class="btn" style="margin-top:10px" onclick="custScreen(6); toast('Driver assigned')">Skip → Assigned</button>`; break;
+    case 6:
+      html = `${prog}
+        ${map}
+        <div class="item"><div><strong>Rohit · DL 92AB1234</strong><div class="hint">Bajaj Pulsar · Blue</div></div><span class="pill">ETA 4 min</span></div>
+        <div class="list" style="margin:10px 0">
+          <div class="item"><span class="hint">You</span><span>Hi, I’m at Gate 2</span></div>
+          <div class="item"><span class="hint">Rohit</span><span>On the way, 3 mins</span></div>
+        </div>
+        <div class="row"><button class="btn">Chat</button><button class="btn ghost">Call</button><button class="btn ghost" onclick="custScreen(7)">Reached</button></div>`; break;
+    case 7:
+      html = `${prog}
+        <div class="field"><label>Payment Method</label><select class="input"><option>UPI</option><option>Card</option><option>Cash</option></select></div>
+        <button class="btn" onclick="custScreen(8); toast('Payment successful')">Pay ₹142</button>`; break;
+    case 8:
+      html = `${prog}
+        <div class="field"><label>Rate your ride</label><div class="row"><span class="pill">⭐️⭐️⭐️⭐️☆</span></div></div>
+        <button class="btn" onclick="custScreen(1)">Done</button>
+        <div class="hint">History saved. Find it under Rides tab.</div>`; break;
+  }
+  $('#cust-screen').innerHTML = html + nextBtn;
+}
+renderSteps($('#steps-cust'), custSteps); custScreen(0);
+
+$$('[data-cust-nav]').forEach(b=>b.addEventListener('click',()=>{
+  $$("[data-cust-nav]").forEach(n=>n.classList.remove('active'));
+  b.classList.add('active'); toast('Switched: '+b.dataset.custNav);
+}));
+$('#demo-ride').addEventListener('click', async()=>{ for (let i=1;i<9;i++){ custScreen(i); await new Promise(r=>setTimeout(r, i===5?650:360)); } });
+$('#demo-parcel').addEventListener('click', ()=>{ custScreen(1); toast('Parcel flow mirrors ride with sender/receiver fields & proof-of-delivery.'); });
+$('#reset-cust').addEventListener('click', ()=> custScreen(0));
+
+// ----- RIDER FLOW -----
+const riderSteps = [
+  {title:'KYC Upload', subtitle:'ID, DL, RC', tag:'Onboarding'},
+  {title:'Admin Approval', subtitle:'Verification pending', tag:'Review'},
+  {title:'Go Online', subtitle:'Receive requests', tag:'Status'},
+  {title:'Incoming Request', subtitle:'Pickup details + fare', tag:'Decision'},
+  {title:'Navigate to Pickup', subtitle:'Built-in maps', tag:'Route'},
+  {title:'Start Ride (OTP)', subtitle:'Verify & begin', tag:'Start'},
+  {title:'Navigate to Drop', subtitle:'Turn-by-turn', tag:'Route'},
+  {title:'Complete & Earnings', subtitle:'Commission auto-deduct', tag:'Payout'}
+];
+renderSteps($('#steps-rider'), riderSteps);
+
+function setStepStateRider(i){ const c=$('#steps-rider'); const nodes=$$('.step', c); nodes.forEach((n,idx)=>{ n.classList.remove('done','active'); if(idx<i) n.classList.add('done') }); nodes[i]?.classList.add('active'); }
+function riderScreen(i){
+  setStepStateRider(i); $('#rider-title').textContent = riderSteps[i].title;
+  const nextBtn = `<div class=\"row\" style=\"justify-content:space-between; margin-top:12px\"><button class=\"btn ghost\" ${i===0?'disabled':''} onclick=\"riderScreen(${i-1})\">Back</button><button class=\"btn\" ${i===riderSteps.length-1?'disabled':''} onclick=\"riderScreen(${i+1})\">Next</button></div>`;
+  const map = `<div class=\"map\"><div class=\"pin\" style=\"left:30%; top:30%\"></div><div class=\"pin\" style=\"left:75%; top:60%\"></div><div class=\"car\"></div></div>`;
+  let html='';
+  switch(i){
+    case 0: html = `<div class=\"field\"><label>Upload DL</label><input class=\"input\" placeholder=\"dl_front.jpg\"/></div><div class=\"field\"><label>Vehicle RC</label><input class=\"input\" placeholder=\"rc.pdf\"/></div><button class=\"btn\" onclick=\"riderScreen(1); toast('KYC submitted')\">Submit</button>`; break;
+    case 1: html = `<div class=\"item\"><div><strong>Pending Approval</strong><div class=\"hint\">You'll be notified soon</div></div><span class=\"pill\">⏳</span></div><button class=\"btn\" onclick=\"riderScreen(2); toast('Approved')\">Simulate Approval</button>`; break;
+    case 2: html = `<div class=\"item\"><div><strong>Status</strong><div class=\"hint\">Go online to receive requests</div></div><label class=\"pill\">Offline</label></div><button class=\"btn\" onclick=\"riderScreen(3); toast('You are Online')\">Go Online</button>`; break;
+    case 3: html = `<div class=\"item\"><div><strong>New Ride Request</strong><div class=\"hint\">2.1 km away · ₹142 fare</div></div><span class=\"pill\">15s</span></div><div class=\"row\"><button class=\"btn\" onclick=\"riderScreen(4); toast('Accepted')\">Accept</button><button class=\"btn ghost\" onclick=\"toast('Declined')\">Decline</button></div>`; break;
+    case 4: html = `${map}<button class=\"btn\" style=\"margin-top:10px\" onclick=\"riderScreen(5); toast('Arrived at pickup')\">Arrived</button>`; break;
+    case 5: html = `<div class=\"field\"><label>Enter OTP</label><input class=\"input\" placeholder=\"1234\"/></div><button class=\"btn\" onclick=\"riderScreen(6); toast('Ride started')\">Start Ride</button>`; break;
+    case 6: html = `${map}<button class=\"btn\" style=\"margin-top:10px\" onclick=\"riderScreen(7); toast('Reached drop')\">Complete Ride</button>`; break;
+    case 7: html = `<div class=\"list\"><div class=\"item\"><div><strong>Earnings</strong><div class=\"hint\">Fare ₹142 · Commission 15% = ₹21</div></div><strong>₹121</strong></div><div class=\"item\"><div>Payout</div><span class=\"pill\">Added to EOD</span></div></div><button class=\"btn\" onclick=\"riderScreen(2)\">Go Offline</button>`; break;
+  }
+  $('#rider-screen').innerHTML = html + nextBtn;
+}
+riderScreen(0);
+
+// Simple earnings chart
+function drawChart(id, values){
+  const c = $(id); const ctx = c.getContext('2d'); const w = c.width = c.offsetWidth; const h = c.height = c.offsetHeight; ctx.clearRect(0,0,w,h);
+  const pad = 24; const max = Math.max(...values) * 1.2; const dx = (w - pad*2) / (values.length-1);
+  ctx.lineWidth = 2; ctx.beginPath(); values.forEach((v,i)=>{ const x = pad + dx*i; const y = h - pad - (v/max)*(h - pad*2); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }); ctx.strokeStyle = '#7dd3fc'; ctx.stroke();
+  ctx.fillStyle = 'rgba(125,211,252,.15)'; ctx.lineTo(w-pad, h-pad); ctx.lineTo(pad, h-pad); ctx.closePath(); ctx.fill();
+}
+const earnVals = [4,6,3,7,8,10,6,12]; drawChart('#earn-chart', earnVals);
+
+$('#demo-request').addEventListener('click', async()=>{ for (let i=0;i<8;i++){ riderScreen(i); await new Promise(r=>setTimeout(r, 420)); } });
+$('#reset-rider').addEventListener('click', ()=> riderScreen(0));
+
+// ----- ADMIN FLOW -----
+const adminSteps = [
+  {title:'Login', subtitle:'Email + 2FA (optional)', tag:'Access'},
+  {title:'Dashboard', subtitle:'KPIs + live map', tag:'Overview'},
+  {title:'KYC Approvals', subtitle:'Approve/Reject drivers', tag:'Compliance'},
+  {title:'Trips Monitor', subtitle:'Live & past trips', tag:'Ops'},
+  {title:'Fare & Commission', subtitle:'Vehicle/city wise', tag:'Pricing'},
+  {title:'Payouts (EOD)', subtitle:'RazorpayX/Cashfree', tag:'Finance'},
+  {title:'Reports & Support', subtitle:'Exports + live chat', tag:'Service'}
+];
+renderSteps($('#steps-admin'), adminSteps);
+
+function adminScreen(key){
+  $('#admin-title').textContent = ({dash:'Dashboard', users:'Users', trips:'Trips', fare:'Fare & Commission', payouts:'Payouts'}[key]||'Dashboard');
+  let html='';
+  if(key==='dash'){
+    html = `
+      <div class="split">
+        <div class="card" style="padding:12px; width: 48%">
+          <div class="head"><strong>KPIs (Today)</strong><span class="pill">Live</span></div>
+          <div class="body"><div class="split">
+            <div class="item"><div>Rides</div><strong>312</strong></div>
+            <div class="item"><div>Parcels</div><strong>87</strong></div>
+            <div class="item"><div>Revenue</div><strong>₹ 68,420</strong></div>
+            <div class="item"><div>Active Drivers</div><strong>154</strong></div>
+          </div></div>
+        </div>
+        <div class="card" style="padding:12px; width: 48%">
+          <div class="head"><strong>Live Map (Mock)</strong></div>
+          <div class="body"><div class="map" style="height:180px"><div class="pin" style="left:20%; top:48%"></div><div class="pin" style="left:68%; top:38%"></div><div class="car" style="top:40%"></div></div></div>
+        </div>
+      </div>`;
+  }
+  if(key==='users'){
+    html = `
+      <h3>Driver KYC</h3>
+      <table><thead><tr><th>Name</th><th>Status</th><th>DL</th><th>RC</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>Rohit Kumar</td><td>Pending</td><td>dl_rohit.jpg</td><td>rc_rohit.pdf</td><td><button class="btn" onclick="toast('Approved');">Approve</button> <button class="btn ghost" onclick="toast('Rejected');">Reject</button></td></tr>
+        <tr><td>Anita Verma</td><td>Approved</td><td>dl_anita.jpg</td><td>rc_anita.pdf</td><td><span class="pill">—</span></td></tr>
+      </tbody></table>`;
+  }
+  if(key==='trips'){
+    html = `
+      <h3>Trips</h3>
+      <table><thead><tr><th>ID</th><th>Type</th><th>User</th><th>Driver</th><th>Status</th><th>Fare</th></tr></thead>
+      <tbody>
+        <tr><td>#T-9211</td><td>Ride</td><td>Akash</td><td>Rohit</td><td>Ongoing</td><td>₹142</td></tr>
+        <tr><td>#P-231</td><td>Parcel</td><td>Diya</td><td>Imran</td><td>Completed</td><td>₹96</td></tr>
+      </tbody></table>`;
+  }
+  if(key==='fare'){
+    html = `
+      <h3>Fare & Commission</h3>
+      <div class="split">
+        <div>
+          <div class="field"><label>Base Fare (Bike)</label><input class="input" value="₹ 30"/></div>
+          <div class="field"><label>Per Km</label><input class="input" value="₹ 8"/></div>
+          <div class="field"><label>Per Min</label><input class="input" value="₹ 1"/></div>
+          <button class="btn" onclick="toast('Saved')">Save</button>
+        </div>
+        <div>
+          <div class="field"><label>Commission (%)</label><input class="input" value="15"/></div>
+          <div class="field"><label>Night Surge (%)</label><input class="input" value="25"/></div>
+          <button class="btn ghost" onclick="toast('Applied city-wide')">Apply</button>
+        </div>
+      </div>`;
+  }
+  if(key==='payouts'){
+    html = `
+      <h3>Evening Payouts</h3>
+      <table><thead><tr><th>Driver</th><th>Trips</th><th>Earnings</th><th>Commission</th><th>Payout</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Rohit</td><td>12</td><td>₹1680</td><td>₹252</td><td><strong>₹1428</strong></td><td><button class="btn" onclick="toast('Payout executed via API')">Pay</button></td></tr>
+        <tr><td>Anita</td><td>9</td><td>₹1215</td><td>₹182</td><td><strong>₹1033</strong></td><td><button class="btn ghost" onclick="toast('Queued')">Queue</button></td></tr>
+      </tbody></table>`;
+  }
+  $('#admin-screen').innerHTML = html;
+}
+adminScreen('dash');
+
+$$('[data-admin-nav]').forEach(b=>b.addEventListener('click',()=>{
+  $$("[data-admin-nav]").forEach(n=>n.classList.remove('active'));
+  b.classList.add('active'); adminScreen(b.dataset.adminNav);
+}));
+$('#demo-kyc').addEventListener('click', ()=>{ adminScreen('users'); toast('Approved 5 KYCs'); });
+$('#demo-payout').addEventListener('click', ()=>{ adminScreen('payouts'); toast('Payout batch executed'); });
+$('#reset-admin').addEventListener('click', ()=> adminScreen('dash'));
+
+// Insight chart (admin)
+function drawBars(id, values){
+  const c=$(id); const ctx=c.getContext('2d'); const w=c.width=c.offsetWidth; const h=c.height=c.offsetHeight; ctx.clearRect(0,0,w,h);
+  const pad=24; const max=Math.max(...values)*1.2; const bw=(w-pad*2)/values.length - 10; values.forEach((v,i)=>{ const x=pad + i*(bw+10); const y=h-pad - (v/max)*(h-pad*2); const bh=h-pad - y; ctx.fillStyle='rgba(155,123,255,.8)'; ctx.fillRect(x,y,bw,bh); });
+}
+drawBars('#kpi-chart', [12,18,10,22,26,19,24]);
+
+// Global controls
+$('#run-all').addEventListener('click', async()=>{
+  // Customer
+  $('.apptabs button[data-app="customer"]').click(); await new Promise(r=>setTimeout(r,300));
+  for (let i=0;i<custSteps.length;i++){ custScreen(i); await new Promise(r=>setTimeout(r, 350)); }
+  // Rider
+  $('.apptabs button[data-app="rider"]').click(); await new Promise(r=>setTimeout(r,300));
+  for (let i=0;i<8;i++){ riderScreen(i); await new Promise(r=>setTimeout(r, 320)); }
+  // Admin
+  $('.apptabs button[data-app="admin"]').click(); await new Promise(r=>setTimeout(r,300));
+  adminScreen('dash'); toast('Full simulation complete');
+});
+$('#reset-all').addEventListener('click', ()=>{ custScreen(0); riderScreen(0); adminScreen('dash'); toast('Reset complete'); });
+
+// Fake export (placeholder)
+$('#export-ss').addEventListener('click', ()=> toast('Tip: Use your browser’s Full Page Screenshot for export'));
+</script>
+</body>
+</html>
